@@ -1,0 +1,17 @@
+name: dart_wikipedia_scraper
+description: A sample command-line application.
+version: 1.0.0
+# homepage: https://www.example.com
+
+environment:
+  sdk: '>=2.18.5 <3.0.0'
+
+dependencies:
+    http: any
+    html: any
+    ext_storage: ^1.0.3
+    csv: ^5.0.1
+
+dev_dependencies:
+  lints: ^2.0.0
+  test: ^1.16.0
