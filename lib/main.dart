@@ -136,6 +136,9 @@ Future<void> scrape() async {
                 inwoneraantal[0].children[0].children[0].text.trim();
             naamGemeente = naamGemeente.replaceAll('Bestuurscentrum', '');
             naamGemeente = naamGemeente.trim();
+            if (naamGemeente == "Noord-H") {
+              naamGemeente = "Noord-Holland";
+            }
 
             String inwoneraantalGemeente1 =
                 inwoneraantal[0].children[1].children[10].text.trim();
