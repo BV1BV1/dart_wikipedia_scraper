@@ -122,7 +122,7 @@ Future<void> scrape() async {
                   .children[0]
                   .text
                   .contains('Drenthe')) {
-            print(count.toString());
+            //print(count.toString());
 
             String naamProvincie =
                 inwoneraantal[0].children[1].children[4].text.trim();
@@ -151,48 +151,177 @@ Future<void> scrape() async {
 
             if (coordinates != null) {
               final String coordinaten = coordinates.text.trim();
-
+              getXcoordCity(coordinaten);
+              getYcoordCity(coordinaten);
               // print(
               //     '$naamGemeente $naamProvincie $coordinaten $inwoneraantalGemeente1 $inwoneraantalGemeente2');
+              String inwonerAantal;
+              if (inwoneraantalGemeente1.contains('Inwoners')) {
+                inwonerAantal = inwoneraantalGemeente1;
+              } else {
+                inwonerAantal = inwoneraantalGemeente2;
+              }
+
+              inwonerAantal = cleanupInwoneraantal(inwonerAantal);
+
+              int inwonerGetal;
+              try {
+                inwonerGetal = parseInwoneraantalToInt(inwonerAantal);
+              } catch (exception) {
+                print("kon getal niet converteren");
+                inwonerGetal = 0;
+              }
+              //print("$naamGemeente $inwonerGetal");
               gemeenten.add({
                 "gemeenteNaam": naamGemeente,
                 "provincieNaam": naamProvincie,
-                "coordinaten": coordinaten,
-                "inwoneraantalRegel1": inwoneraantalGemeente1,
-                "inwoneraantalRegel2": inwoneraantalGemeente2
+                "xCoordinatenStad": getXcoordCity(coordinaten),
+                "yCoordinatenStad": getYcoordCity(coordinaten),
+                //"coordinaten": coordinaten,
+                "inwoneraantal": inwonerGetal,
+                //"inwoneraantal": inwonerAantal,
+                // "inwoneraantalRegel1": inwoneraantalGemeente1,
+                // "inwoneraantalRegel2": inwoneraantalGemeente2
               });
             }
           }
         }
       }
     }
-
   }
-    //if (count > 783) {
-      print('im done looping');
+  //if (count > 783) {
+  //print('im done looping');
 
-      List<List<dynamic>> rows = [];
+  List<List<dynamic>> rows = [];
 
+  List<dynamic> row = [];
+  row.add("gemeenteNaam");
+  row.add("provincieNaam");
+  row.add("xCoordinatenStad");
+  row.add("yCoordinatenStad");
+  //row.add("coordinaten");
+  row.add("inwoneraantal");
+  //row.add("inwoneraantalRegel1");
+  //row.add("inwoneraantalRegel2");
+  rows.add(row);
+
+  for (int i = 0; i < gemeenten.length; i++) {
+    if (i % 2 == 0) {
       List<dynamic> row = [];
-      row.add("gemeenteNaam");
-      row.add("provincieNaam");
-      row.add("coordinaten");
-      row.add("inwoneraantalRegel1");
-      row.add("inwoneraantalRegel2");
+      row.add(gemeenten[i]["gemeenteNaam"]);
+      row.add(gemeenten[i]["provincieNaam"]);
+      row.add(gemeenten[i]["xCoordinatenStad"]);
+      row.add(gemeenten[i]["yCoordinatenStad"]);
+      //row.add(gemeenten[i]["coordinaten"]);
+      row.add(gemeenten[i]["inwoneraantal"]);
+      //row.add(gemeenten[i]["inwoneraantalRegel1"]);
+      //row.add(gemeenten[i]["inwoneraantalRegel2"]);
       rows.add(row);
+    }
 
-      for (int i = 0; i < gemeenten.length; i++) {
-        List<dynamic> row = [];
-        row.add(gemeenten[i]["gemeenteNaam"]);
-        row.add(gemeenten[i]["provincieNaam"]);
-        row.add(gemeenten[i]["coordinaten"]);
-        row.add(gemeenten[i]["inwoneraantalRegel1"]);
-        row.add(gemeenten[i]["inwoneraantalRegel2"]);
-        rows.add(row);
-      }
+    String csv = const ListToCsvConverter().convert(rows);
+    print(csv);
+  }
+}
 
-      String csv = const ListToCsvConverter().convert(rows);
-      print(csv);
-    //}
+String cleanupInwoneraantal(String inwonerAantal) {
+  if (inwonerAantal.contains("?")) {
+    int indexQuestionmark = inwonerAantal.indexOf("?");
+    inwonerAantal =
+        inwonerAantal.substring(indexQuestionmark - 8, indexQuestionmark);
+  }
+  inwonerAantal = inwonerAantal.replaceAll(".", "");
+  inwonerAantal.trim();
+  return inwonerAantal;
+}
 
+int parseInwoneraantalToInt(String inwonerAantal) {
+  int inwonerCijfer = int.parse(inwonerAantal);
+  //print(inwonerCijfer.toString());
+  return inwonerCijfer;
+}
+
+double getXcoordCity(String coordinaten) {
+  double xCoord;
+  int degrees = 0;
+  int minutes = 0;
+  int seconds = 0;
+  double distanceToGreenwhich;
+
+  String graden = coordinaten.substring(
+      coordinaten.lastIndexOf("°") - 2, coordinaten.lastIndexOf("°"));
+  degrees = int.parse(graden);
+
+  if (coordinaten.contains("′")) {
+    String minuten = coordinaten.substring(
+        coordinaten.lastIndexOf("′") - 2, coordinaten.lastIndexOf("′"));
+    minuten = minuten.replaceAll("°", "");
+    minutes = int.parse(minuten);
+  } else {
+    String minuten = coordinaten.substring(
+        coordinaten.lastIndexOf("'") - 2, coordinaten.lastIndexOf("'"));
+    minuten = minuten.replaceAll("°", "");
+    minutes = int.parse(minuten);
+  }
+
+  if (coordinaten.contains('"')) {
+    String seconden = coordinaten.substring(
+        coordinaten.lastIndexOf('"') - 2, coordinaten.lastIndexOf('"'));
+    seconden = seconden.replaceAll('"', '');
+    seconden = seconden.replaceAll("'", "");
+    seconds = int.parse(seconden);
+  }
+
+  distanceToGreenwhich = degrees + (minutes / 60) + (seconds / 3600);
+
+  if (coordinaten.contains("WL")) {
+    xCoord = -distanceToGreenwhich;
+  } else {
+    xCoord = distanceToGreenwhich;
+  }
+  //print("xCoord: $xCoord");
+  return xCoord;
+}
+
+double getYcoordCity(String coordinaten) {
+  double yCoord;
+  int degrees = 0;
+  int minutes = 0;
+  int seconds = 0;
+  double distanceToEquator;
+
+  String graden = coordinaten.substring(
+      coordinaten.indexOf("°") - 2, coordinaten.indexOf("°"));
+  degrees = int.parse(graden);
+
+  if (coordinaten.contains("′")) {
+    String minuten = coordinaten.substring(
+        coordinaten.indexOf("′") - 2, coordinaten.indexOf("′"));
+    minuten = minuten.replaceAll("°", "");
+    minutes = int.parse(minuten);
+  } else {
+    String minuten = coordinaten.substring(
+        coordinaten.indexOf("'") - 2, coordinaten.indexOf("'"));
+    minuten = minuten.replaceAll("°", "");
+    minutes = int.parse(minuten);
+  }
+
+  if (coordinaten.contains('"')) {
+    String seconden = coordinaten.substring(
+        coordinaten.indexOf('"') - 2, coordinaten.indexOf('"'));
+    seconden = seconden.replaceAll('"', '');
+    seconden = seconden.replaceAll("'", "");
+    seconds = int.parse(seconden);
+  }
+
+  distanceToEquator = degrees + (minutes / 60) + (seconds / 3600);
+
+  if (coordinaten.contains("NB")) {
+    yCoord = 180 + distanceToEquator;
+  } else {
+    yCoord = 180 - distanceToEquator;
+  }
+
+  //print("yCoordCity: $yCoord");
+  return yCoord;
 }
