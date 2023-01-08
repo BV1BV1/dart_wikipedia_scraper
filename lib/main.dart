@@ -30,17 +30,20 @@ Future<void> scrape() async {
     if (href == null) continue;
 
     if (href.startsWith('/wiki/') && !href.endsWith('.svg')) {
-      final page = await get(Uri.parse('https://nl.wikipedia.org/$href'));
+      //print(Uri.parse('https://nl.wikipedia.org$href'));
+      final page = await get(Uri.parse('https://nl.wikipedia.org$href'));
       final document = parse(page.body);
+      //print(document.body);
       final coordinates = document.getElementById('text_coordinates');
+      //print(coordinates);
       final inwoneraantal = document.getElementsByClassName('infobox');
-
+      //print(inwoneraantal);
       // if (coordinates != null) {
       //   print(
       //       '$href: ${coordinates.text} ${inwoneraantal[0].children[1].text}');
       // }
 
-      if (inwoneraantal.isNotEmpty && inwoneraantal.length > 1 //&&
+      if (inwoneraantal.isNotEmpty //&& inwoneraantal.length > 0 &&
           //inwoneraantal[0].children.isNotEmpty &&
           //inwoneraantal[1].children.isNotEmpty &&
           //inwoneraantal[1].children[1].children.length > 9
@@ -61,7 +64,9 @@ Future<void> scrape() async {
 
           count++;
 
-          if (count < 785 &&
+          if (count < 1385 &&
+              count!=1269 &&
+              count!=1270 &&
               !inwoneraantal[0]
                   .children[0]
                   .children[0]
@@ -122,7 +127,7 @@ Future<void> scrape() async {
                   .children[0]
                   .text
                   .contains('Drenthe')) {
-            //print(count.toString());
+            print(count.toString());
 
             String naamProvincie =
                 inwoneraantal[0].children[1].children[4].text.trim();
@@ -139,6 +144,7 @@ Future<void> scrape() async {
             if (naamGemeente == "Noord-H") {
               naamGemeente = "Noord-Holland";
             }
+            print(naamGemeente);
 
             String inwoneraantalGemeente1 =
                 inwoneraantal[0].children[1].children[10].text.trim();
@@ -267,6 +273,7 @@ double getXcoordCity(String coordinaten) {
     minutes = int.parse(minuten);
   }
 
+  
   if (coordinaten.contains('"')) {
     String seconden = coordinaten.substring(
         coordinaten.lastIndexOf('"') - 2, coordinaten.lastIndexOf('"'));
@@ -293,8 +300,12 @@ double getYcoordCity(String coordinaten) {
   int seconds = 0;
   double distanceToEquator;
 
-  String graden = coordinaten.substring(
-      coordinaten.indexOf("°") - 2, coordinaten.indexOf("°"));
+  int startIndex;
+  (coordinaten.indexOf("°") - 2) >= 0
+      ? startIndex = (coordinaten.indexOf("°") - 2)
+      : startIndex = 0;
+
+  String graden = coordinaten.substring(startIndex, coordinaten.indexOf("°"));
   degrees = int.parse(graden);
 
   if (coordinaten.contains("′")) {
